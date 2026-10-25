@@ -1,0 +1,48 @@
+[
+  {
+    "name": "独立广告接口保留响应外壳",
+    "input": {
+      "url": "https://api.weibo.cn/2/ad/weibointl?fixture=1",
+      "body": {"data":[{"id":"fixture-1"},{"id":"fixture-2"},{"id":"fixture-3"},{"id":"fixture-4"}],"errno":0,"error":""}
+    },
+    "expected": {"mode":"json","body":{"data":[],"errno":0,"error":""}}
+  },
+  {
+    "name": "广告接口的错误响应保留",
+    "input": {"url":"https://api.weibo.cn/2/ad/weibointl","body":{"data":[{"id":"fixture"}],"errno":10001,"error":"fixture-error"}},
+    "expected": {"mode":"passthrough"}
+  },
+  {
+    "name": "广告卡片过滤且正常推荐和分页保留",
+    "input": {
+      "url":"https://api.weibo.cn/2/statuses/friends/timeline",
+      "body":{"statuses":[{"id":1,"text":"普通微博中讨论广告"},{"id":2,"ad_marked":true},{"id":3,"mblogtypename":"推荐"}],"next_cursor":"fixture-next","total_number":10}
+    },
+    "expected": {"mode":"json","body":{"statuses":[{"id":1,"text":"普通微博中讨论广告"},{"id":3,"mblogtypename":"推荐"}],"next_cursor":"fixture-next","total_number":10}}
+  },
+  {
+    "name": "同路径的其他域名原样放行",
+    "input": {"url":"https://example.com/2/ad/weibointl","body":{"data":[{"id":"fixture"}]}},
+    "expected": {"mode":"passthrough"}
+  },
+  {
+    "name": "非 JSON 原样放行",
+    "input": {"url":"https://api.weibo.cn/2/ad/weibointl","body":"fixture: not json"},
+    "expected": {"mode":"passthrough"}
+  },
+  {
+    "name": "启动横幅清理保留其他配置",
+    "input": {"url":"https://weibointl.api.weibo.cn/portal.php?c=default&a=open_app","body":{"data":{"detail_banner_ad":[{"id":"fixture"}],"theme":"fixture-theme"}}},
+    "expected": {"mode":"json","body":{"data":{"detail_banner_ad":[],"theme":"fixture-theme"}}}
+  },
+  {
+    "name": "SDK 包装的空白及 OK 后缀保留",
+    "input": {"url":"https://sdkapp.uve.weibo.com/interface/sdk/sdkad.php","body":"  {\"ads\":[{\"id\":1}],\"show_push_splash_ad\":true,\"other\":7}\nOK\n"},
+    "expected": {"mode":"text","body":"  {\"ads\":[],\"show_push_splash_ad\":false,\"other\":7}\nOK\n"}
+  },
+  {
+    "name": "旧版预加载广告容器保留外层数据",
+    "input": {"url":"https://wbapp.uve.weibo.com/wbapplua/wbpullad.lua","body":{"cached_ad":{"ads":[{"id":"fixture"}],"other":"keep"},"ok":1}},
+    "expected": {"mode":"json","body":{"cached_ad":{"ads":[],"other":"keep"},"ok":1}}
+  }
+]

@@ -1,0 +1,4 @@
+interface:
+  display_name: "QX 广告分析与过滤"
+  short_description: "分析 App 与网站广告接口，编写并验证 Quantumult X 重写规则与响应脚本"
+  default_prompt: "使用 $qx-ad-filter 分析目标 App 或网站的广告请求，基于实际响应编写并验证 QX 规则，按需交付脚本或订阅资源。"

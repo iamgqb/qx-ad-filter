@@ -1,0 +1,13 @@
+{
+  "name": "qx-ad-filter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Quantumult X 广告过滤脚本与通用广告分析技能",
+  "author": "yuecheng",
+  "scripts": {
+    "test": "node --test tests/*.test.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
