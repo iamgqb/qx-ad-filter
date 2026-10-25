@@ -50,4 +50,6 @@ URL 规则限定域名、路径和参数边界，覆盖实际查询参数顺序�
 
 对最终版本运行相关回归。报告目标版本、实际验证方式、未验证范围与停用方法；订阅另附资源地址和发布状态。原始流量、账号、配置备份、节点与证书留在私有工作目录。
 
+用户要求远程订阅或已授权发布时，把[远程发布与订阅收尾](references/resource-format.md#远程发布与订阅收尾)作为交付的最后阶段：完成相关文件提交与推送、验证远程正文；已授权安装到 QX 时，再切换为远程资源并清理重复本地规则。发布失败或设备未生效时报告具体状态，不能以本地文件完成代替远程交付。仅要求本地规则时保留本地交付范围。
+
 不确定的语法与 API 以 [QX 官方配置示例](https://github.com/crossutility/Quantumult-X/blob/master/sample.conf)和[响应脚本示例](https://github.com/crossutility/Quantumult-X/blob/master/sample-rewrite-with-script.js)为准。具体 App 的历史接口、设备操作结果与授权记录不作为通用前提。
