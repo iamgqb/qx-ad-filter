@@ -67,7 +67,7 @@ https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/scripts/weibo-ad-filt
 
 发布后检查各资源及其引用的 JS 的 Raw 地址返回实际文件内容，而不是 GitHub 的 HTML 页面。恩基爱社区资源只需发布 `rewrites/nga-ad-filter.conf`，不需要 JS。订阅配置设置为每 86400 秒更新；发布修改后也可在 QX 中手动刷新资源，并确认相应远程脚本已更新。若使用固定版本，资源和脚本应同时指向该版本。
 
-用户已要求远程发布时，按[远程发布与订阅收尾](skills/qx-ad-filter/references/resource-format.md#远程发布与订阅收尾)完成提交、推送、Raw 正文验证和已授权的 QX 订阅安装，再交付可用地址。
+本仓库正式资源默认按[远程发布与订阅收尾](skills/qx-ad-filter/references/resource-format.md#远程发布与订阅收尾)完成提交、推送、Raw 正文验证和已授权的 QX 订阅安装，再交付可用地址；用户明确要求仅本地规则时例外。
 
 ## 通用广告分析技能
 
