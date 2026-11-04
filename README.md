@@ -83,6 +83,8 @@ https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/zhihu-ad-fil
 
 1.1.0 沿用同一 `main` 分支订阅地址；更新资源后应显示 3 条规则。仅更新列表或重新打开 App，不能替代检查资源版本、规则命中和实际画面。
 
+资源 1.1.0 已随提交 `6e4c743` 发布，Raw URL 返回 HTTP 200，513 字节文本正文与发布文件一致。
+
 ## 发布与更新
 
 将 `scripts/` 和 `rewrites/` 一起发布到仓库 `main` 分支后，上述订阅地址即可使用。资源中的 JS 地址为：
