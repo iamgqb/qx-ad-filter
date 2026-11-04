@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | 微博国际版 Weibo intl. | [weibo-ad-filter.js](scripts/weibo-ad-filter.js) | [weibo-ad-filter.conf](rewrites/weibo-ad-filter.conf) | 7.2.2 的开屏预加载、SDK 广告位、信息流广告与广告卡片 |
 | 恩基爱社区 | QX 原生规则，无 JS | [nga-ad-filter.conf](rewrites/nga-ad-filter.conf) | 1.1.47 的 SDK 开屏与推荐流广告；热帖、版块及帖子回复回归 |
-| 知乎（iOS） | QX 原生规则，无 JS | [zhihu-ad-filter.conf](rewrites/zhihu-ad-filter.conf) | 11.11.0 的开屏预加载与实时开屏；推荐流正常内容保留 |
+| 知乎（iOS） | QX 原生规则，无 JS | [zhihu-ad-filter.conf](rewrites/zhihu-ad-filter.conf) | 11.11.0 的开屏与回答底部广告，配套 HTTPDNS 回退；正文与评论保留 |
 
 微博国际版的 bundle ID 为 `com.weibo.international`；这些规则的验证范围是国际版。详细接口分析、缓存处理和验证边界见[微博经验记录](docs/experience/weibo-case.md)。
 
@@ -58,9 +58,9 @@ https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/nga-ad-filte
 
 这些广告 SDK 接口可能被其他 App 共用，相同接口的广告也会被拦截。停用时，在重写资源列表中禁用或移除「恩基爱社区去广告」订阅。保留原有证书、节点、其他订阅及分流。
 
-## 知乎开屏订阅使用
+## 知乎订阅使用
 
-[zhihu-ad-filter.conf](rewrites/zhihu-ad-filter.conf) 1.0.0 包含 1 条原生 `reject-dict` 规则和 `api.zhihu.com` 的 MitM hostname，覆盖实机确认的开屏预加载与实时投放路径，不需要 JavaScript。过滤前、启用后和停用后的开屏对照见[知乎案例](docs/experience/zhihu-ios-case.md)。
+[zhihu-ad-filter.conf](rewrites/zhihu-ad-filter.conf) 1.1.0 包含 3 条原生 `reject-dict` 规则和 `api.zhihu.com` 的 MitM hostname，覆盖实机确认的开屏与回答末尾、评论之前的广告，不需要 JavaScript。接口、开屏对照和回答底部画面验证见[知乎案例](docs/experience/zhihu-ios-case.md)。
 
 在 QX 的重写资源中添加以下 URL：
 
@@ -72,14 +72,16 @@ https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/zhihu-ad-fil
 
 ```ini
 [rewrite_remote]
-https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/zhihu-ad-filter.conf, tag=知乎开屏去广告, update-interval=86400, enabled=true
+https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/zhihu-ad-filter.conf, tag=知乎去广告, update-interval=86400, enabled=true
 ```
 
-启用 VPN、重写和 MitM，并沿用已安装且完全信任的 MitM 证书。资源已包含必要 hostname；已有同路径本地规则时，启用订阅后清理重复匹配。停用时，在重写资源列表中禁用或移除「知乎开屏去广告」。
+启用 VPN、重写和 MitM，并沿用已安装且完全信任的 MitM 证书。资源已包含必要 hostname；已有同路径本地规则时，启用订阅后清理重复匹配。此前订阅名称为「知乎开屏去广告」时，直接更新原资源即可，无需重复添加。停用时，在重写资源列表中禁用或移除对应订阅。
 
-本版本保留推荐、关注、热榜、正文、SDK 配置和共享素材。当前采样窗口内未复现推荐流广告，未新增信息流记录删除逻辑；答案页等其他位置的广告尚未验证覆盖。验证过程中保留了原有其他资源，未单独验证所有第三方 SDK 回退场景。
+为维持域名重写，资源还会拒绝实测 HTTPDNS 服务器上以 `api.zhihu.com` 开头的单域名或批量解析请求，使其回退系统解析。同一批量请求中的其他域名也会回退；搜索、正文与评论已回归。该规则不把公网 IP 加入 MitM，不拒绝其他域名的独立解析查询。
 
-资源已发布到 `main`，Raw 地址的 HTTP 状态及正文一致性已验证，发布提交为 `6681af7`。
+本版本保留推荐、关注、热榜、正文、评论、SDK 配置和共享素材。推荐流广告未取得确认正样本，未新增信息流记录删除逻辑；其他广告位、全部第三方 SDK 回退、长期频控和未来 HTTPDNS 变化尚未验证。
+
+1.1.0 沿用同一 `main` 分支订阅地址；更新资源后应显示 3 条规则。仅更新列表或重新打开 App，不能替代检查资源版本、规则命中和实际画面。
 
 ## 发布与更新
 
@@ -120,7 +122,7 @@ https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/scripts/weibo-ad-filt
 | [X iOS 解密限制](docs/experience/x-ios-case.md) | 代理证书拒绝的证据，取得响应前的采集边界 |
 | [iOS 屏幕控制](docs/experience/ios-device-control-case.md) | 区分读屏与点击能力，分层验证签名、配置更新和隧道重启 |
 | [恩基爱社区](docs/experience/nga-ios-case.md) | 限量 SDK 元数据采集、精确原生拒绝、开屏与多页面对照 |
-| [知乎 iOS](docs/experience/zhihu-ios-case.md) | 嵌套 JSON 字符串中的广告容器、开屏原生拒绝与停用复现对照 |
+| [知乎 iOS](docs/experience/zhihu-ios-case.md) | 嵌套广告容器、开屏与回答底部原生拒绝、HTTPDNS 单域名和批量查询回退 |
 
 X 原生 iOS App 12.36 在记录的测试环境中拒绝 QX 代理证书，未取得可供过滤的时间线响应；本仓库没有可用的 X 过滤规则。该结论不覆盖其他版本或网页版。
 

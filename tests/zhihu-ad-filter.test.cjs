@@ -13,18 +13,19 @@ const matches = url => patterns.filter(pattern => pattern.test(url)).length;
 const hosts = new Set(active.find(line => line.startsWith("hostname = ")).split("=")[1].split(",").map(s => s.trim()));
 const observed = [
   "https://api.zhihu.com/commercial_api/launch_v2",
-  "https://api.zhihu.com/commercial_api/real_time_launch_v2"
+  "https://api.zhihu.com/commercial_api/real_time_launch_v2",
+  "https://api.zhihu.com/commercial_api/answer/12345/bottom-v2"
 ];
 
 test("知乎原生资源仅含必要 hostname 和拒绝规则", () => {
   assert.equal(active.length, rules.length + 1);
-  assert.equal(rules.length, 1);
+  assert.equal(rules.length, 3);
   assert(rules.every(rule => rule.endsWith(" url reject-dict")));
   assert(!/script-|\$prefs|\$iCloud|console\.|observe|\[rewrite_local\]|\[mitm\]/.test(resource));
   assert.deepEqual([...hosts], ["api.zhihu.com"]);
 });
 
-test("知乎实测开屏路径和查询参数顺序均唯一匹配，MitM 覆盖完整", () => {
+test("知乎实测开屏、回答底部路径和查询参数顺序均唯一匹配，MitM 覆盖完整", () => {
   for (const url of observed) {
     assert(hosts.has(new URL(url).hostname));
     for (const query of ["", "?app=fixture&size=fixture&vf=fixture", "?vf=fixture&size=fixture&app=fixture"]) {
@@ -39,6 +40,8 @@ test("保留知乎推荐、关注、热榜、正文、SDK 配置、其他商业�
     "https://api.zhihu.com/topstory/hot-lists/total?limit=30",
     "https://api.zhihu.com/moments/tab_v2?feed_type=fixture",
     "https://api.zhihu.com/answers/12345",
+    "https://api.zhihu.com/answers/v2/12345",
+    "https://api.zhihu.com/comment_v5/answers/12345/root_comment?limit=20",
     "https://api.zhihu.com/commercial_api/sdk/prefetch",
     "https://api.zhihu.com/commercial_api/real_time_pull_refresh_v2",
     "https://api.zhihu.com/commercial_api/app_float_layer",
@@ -49,7 +52,7 @@ test("保留知乎推荐、关注、热榜、正文、SDK 配置、其他商业�
   for (const url of normal) assert.equal(matches(url), 0, url);
 });
 
-test("知乎开屏规则不匹配相邻路径、其他域名、协议或查询参数中的伪路径", () => {
+test("知乎广告规则不匹配相邻路径、其他域名、协议或查询参数中的伪路径", () => {
   for (const url of observed) {
     const pathname = new URL(url).pathname;
     for (const neighbor of [
@@ -61,4 +64,37 @@ test("知乎开屏规则不匹配相邻路径、其他域名、协议或查询�
       "https://api.zhihu.com/normal?redirect=" + pathname
     ]) assert.equal(matches(neighbor), 0, neighbor);
   }
+});
+
+test("回答底部仅匹配数字回答 ID 和实测版本路径", () => {
+  for (const id of ["1", "12345", "12345678901234567890"]) {
+    assert.equal(matches(`https://api.zhihu.com/commercial_api/answer/${id}/bottom-v2?source=fixture`), 1);
+  }
+  for (const suffix of [
+    "12345/top-v2", "12345/bottom-v3", "12345/bottom-v2/", "abc/bottom-v2",
+    "-1/bottom-v2", "/bottom-v2", "12345%2F67890/bottom-v2", "12345/bottom-v2extra"
+  ]) assert.equal(matches("https://api.zhihu.com/commercial_api/answer/" + suffix), 0, suffix);
+});
+
+test("HTTPDNS 仅拒绝实测服务器上以知乎 API 开头的单域名或批量解析", () => {
+  const base = "http://182.61.194.7/v2/resolv";
+  for (const query of [
+    "?host=api.zhihu.com",
+    "?host=api.zhihu.com&nettype=wifi&os=ios",
+    "?os=ios&host=api.zhihu.com&nettype=wifi",
+    "?host=api.zhihu.com%2Cwww.zhihu.com%2Cpic1.zhimg.com&os=ios",
+    "?os=ios&host=api.zhihu.com%2cwww.zhihu.com&nettype=wifi",
+    "?host=api.zhihu.com,www.zhihu.com"
+  ]) assert.equal(matches(base + query), 1, query);
+  for (const url of [
+    base.replace("http:", "https:") + "?host=api.zhihu.com",
+    base.replace("182.61.194.7", "182.61.194.8") + "?host=api.zhihu.com",
+    base.replace("182.61.194.7", "182.61.194.7.example.com") + "?host=api.zhihu.com",
+    base + "extra?host=api.zhihu.com", base + "/?host=api.zhihu.com",
+    base + "?host=www.zhihu.com", base + "?host=api.zhihu.com.example.com",
+    base + "?host=api.zhihu.com%2Eexample.com", base + "?ghost=api.zhihu.com",
+    base + "?redirect=host=api.zhihu.com", base + "?host=www.zhihu.com%2Capi.zhihu.com",
+    "http://api.zhihu.com/v2/resolv?host=api.zhihu.com"
+  ]) assert.equal(matches(url), 0, url);
+  assert(!hosts.has("182.61.194.7"), "明文 HTTPDNS 不应扩大 MitM 到公网 IP");
 });
