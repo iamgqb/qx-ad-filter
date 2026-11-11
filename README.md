@@ -109,6 +109,8 @@ https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/spotify-ad-f
 
 验证目标为 Spotify iOS 9.1.94 / iOS 18.6.2，使用原始账号和随机模式；两次自然转场及第三曲一分钟内未见插播或提前跳歌。本轮没有单独导出原生 404 命中记录，不能据此承诺所有投放均已过滤；具体证据与发布结果见案例。规则按请求匹配，通过同一 QX 隧道且使用相同接口的其他客户端也会受影响；未覆盖其他版本、播客内嵌广告及长期投放变化。
 
+1.0.0 已随提交 [`eb1b11c`](https://github.com/iamgqb/qx-ad-filter/commit/eb1b11c) 发布到 `main`；Raw URL 返回 HTTP 200，386 字节文本正文与发布文件一致。
+
 ## 发布与更新
 
 将 `scripts/` 和 `rewrites/` 一起发布到仓库 `main` 分支后，上述订阅地址即可使用。资源中的 JS 地址为：
