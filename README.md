@@ -11,6 +11,7 @@
 | 微博国际版 Weibo intl. | [weibo-ad-filter.js](scripts/weibo-ad-filter.js) | [weibo-ad-filter.conf](rewrites/weibo-ad-filter.conf) | 7.2.2 的开屏预加载、SDK 广告位、信息流广告与广告卡片 |
 | 恩基爱社区 | QX 原生规则，无 JS | [nga-ad-filter.conf](rewrites/nga-ad-filter.conf) | 1.1.47 的 SDK 开屏与推荐流广告；热帖、版块及帖子回复回归 |
 | 知乎（iOS） | QX 原生规则，无 JS | [zhihu-ad-filter.conf](rewrites/zhihu-ad-filter.conf) | 11.11.0 的开屏与回答底部广告，配套 HTTPDNS 回退；正文与评论保留 |
+| Spotify（iOS） | QX 原生规则，无 JS | [spotify-ad-filter.conf](rewrites/spotify-ad-filter.conf) | 9.1.94 原始账号的音频插播链路；两次自然换曲与正常播放回归；保留原随机限制 |
 
 微博国际版的 bundle ID 为 `com.weibo.international`；这些规则的验证范围是国际版。详细接口分析、缓存处理和验证边界见[微博经验记录](docs/experience/weibo-case.md)。
 
@@ -85,6 +86,29 @@ https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/zhihu-ad-fil
 
 资源 1.1.0 已随提交 `6e4c743` 发布，Raw URL 返回 HTTP 200，513 字节文本正文与发布文件一致。
 
+## Spotify 音频插播订阅使用
+
+[spotify-ad-filter.conf](rewrites/spotify-ad-filter.conf) 1.0.0 采用一条 QX 原生拒绝规则，不需要 JS。它限定 Spotify 的三个实测广告路径及 POST 方法，不改写账号权限、设备许可、额度或音频素材请求。账号与播放实验见 [Spotify 案例](docs/experience/spotify-ios-account-playback-case.md)。
+
+在 QX 的重写资源中添加：
+
+```text
+https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/spotify-ad-filter.conf
+```
+
+也可以加入当前配置已有的 `[rewrite_remote]` 段：
+
+```ini
+[rewrite_remote]
+https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/spotify-ad-filter.conf, tag=Spotify 音频插播过滤, update-interval=86400, enabled=true
+```
+
+启用 VPN、重写和 MitM，并沿用已安装且完全信任的 MitM 证书。资源包含必要 hostname。启用订阅后移除本次同路径本地试验规则，确认资源显示 1 条规则。停用时禁用或移除该订阅。
+
+本资源只处理音频插播链路，保留账号原来的随机播放限制。账号播放顺序改写曾短时成功，但后续复测仍出现提前跳歌，相关实验没有发布。若此前另外安装过账号权限改写，应先恢复真实账号响应及正常播放，再安装本资源。
+
+验证目标为 Spotify iOS 9.1.94 / iOS 18.6.2，使用原始账号和随机模式；两次自然转场及第三曲一分钟内未见插播或提前跳歌。本轮没有单独导出原生 404 命中记录，不能据此承诺所有投放均已过滤；具体证据与发布结果见案例。规则按请求匹配，通过同一 QX 隧道且使用相同接口的其他客户端也会受影响；未覆盖其他版本、播客内嵌广告及长期投放变化。
+
 ## 发布与更新
 
 将 `scripts/` 和 `rewrites/` 一起发布到仓库 `main` 分支后，上述订阅地址即可使用。资源中的 JS 地址为：
@@ -93,7 +117,7 @@ https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/zhihu-ad-fil
 https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/scripts/weibo-ad-filter.js
 ```
 
-发布后检查各资源及其引用的 JS 的 Raw 地址返回实际文件内容，而不是 GitHub 的 HTML 页面。恩基爱社区和知乎资源分别只需发布对应的 `rewrites/nga-ad-filter.conf`、`rewrites/zhihu-ad-filter.conf`，不需要 JS。订阅配置设置为每 86400 秒更新；发布修改后也可在 QX 中手动刷新资源，并确认相应远程脚本已更新。若使用固定版本，资源和脚本应同时指向该版本。
+发布后检查各资源及其引用的 JS 的 Raw 地址返回实际文件内容，而不是 GitHub 的 HTML 页面。恩基爱社区、知乎和 Spotify 资源分别只需发布对应的 `rewrites/nga-ad-filter.conf`、`rewrites/zhihu-ad-filter.conf`、`rewrites/spotify-ad-filter.conf`，不需要 JS。订阅配置设置为每 86400 秒更新；发布修改后也可在 QX 中手动刷新资源，并确认相应远程脚本已更新。若使用固定版本，资源和脚本应同时指向该版本。
 
 本仓库正式资源默认按[远程发布与订阅收尾](skills/qx-ad-filter/references/resource-format.md#远程发布与订阅收尾)完成提交、推送、Raw 正文验证和已授权的 QX 订阅安装，再交付可用地址；用户明确要求仅本地规则时例外。
 
@@ -125,6 +149,7 @@ https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/scripts/weibo-ad-filt
 | [iOS 屏幕控制](docs/experience/ios-device-control-case.md) | 区分读屏与点击能力，分层验证签名、配置更新和隧道重启 |
 | [恩基爱社区](docs/experience/nga-ios-case.md) | 限量 SDK 元数据采集、精确原生拒绝、开屏与多页面对照 |
 | [知乎 iOS](docs/experience/zhihu-ios-case.md) | 嵌套广告容器、开屏与回答底部原生拒绝、HTTPDNS 单域名和批量查询回退 |
+| [Spotify iOS 账号权限、播放顺序与音频插播](docs/experience/spotify-ios-account-playback-case.md) | 原生广告拒绝与自然换曲对照；账号顺序改写的失败复测、播放许可和会话恢复边界 |
 
 X 原生 iOS App 12.36 在记录的测试环境中拒绝 QX 代理证书，未取得可供过滤的时间线响应；本仓库没有可用的 X 过滤规则。该结论不覆盖其他版本或网页版。
 
@@ -136,7 +161,7 @@ X 原生 iOS App 12.36 在记录的测试环境中拒绝 QX 代理证书，未�
 npm test
 ```
 
-回归包含：独立广告数组清理、正常微博与分页保留、嵌套卡片、SDK `OK` 后缀、预加载记录失效、错误放行、URL 匹配边界，以及零诊断 I/O、未修改时不编码 JSON、原生订阅格式和远程脚本文件映射。NGA 与知乎原生规则另检查实际投放路径、MitM 覆盖、唯一匹配和普通业务路径保留。
+回归包含：独立广告数组清理、正常微博与分页保留、嵌套卡片、SDK `OK` 后缀、预加载记录失效、错误放行、URL 匹配边界，以及零诊断 I/O、未修改时不编码 JSON、原生订阅格式和远程脚本文件映射。NGA、知乎和 Spotify 原生规则另检查实际投放路径、MitM 覆盖、唯一匹配和普通业务路径保留；Spotify 另验证 POST 方法边界。
 
 也可以用技能自带测试器验证其他同步响应脚本：
 
