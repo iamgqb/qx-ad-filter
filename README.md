@@ -116,7 +116,7 @@ https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/spotify-ad-f
 
 [bilibili-ad-filter.conf](rewrites/bilibili-ad-filter.conf) 1.0.0 包含 3 条规则和 `app.bilibili.com` 的 MitM hostname：两条响应脚本规则处理首页商业卡片与开屏预加载，一条原生 `reject-dict` 规则限定开屏展示接口的 GET 请求。验证目标为中文版 9.19.1（`tv.danmaku.bilianime`）；国际版未回归。接口证据和验证边界见[哔哩哔哩案例](docs/experience/bilibili-ios-case.md)。
 
-资源发布并完成 Raw 正文验证后，在 QX 重写资源中添加：
+在 QX 重写资源中添加：
 
 ```text
 https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/bilibili-ad-filter.conf
@@ -135,7 +135,7 @@ https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/bilibili-ad-
 
 本轮已验证首页真实改写、画面和翻页；开屏曾复现带倒计时的官方活动投放，清空列表仍显示，改为保留 ID 并设为过期后连续启动未再出现。恢复原始投放时未稳定复现，尚未排除全部频控因素，开屏效果保留长期验证边界。播放页、搜索、动态及其他广告形式未纳入本版本；使用相同接口的其他客户端也可能受影响。
 
-发布状态：1.0.0 尚待推送与 Raw 正文验证；完成后更新本节与案例记录。
+1.0.0 已随提交 [`3e6f86d`](https://github.com/iamgqb/qx-ad-filter/commit/3e6f86d) 发布到 `main`；资源与脚本的 Raw URL 均返回 HTTP 200，583 字节资源正文和 2843 字节脚本正文分别与发布文件一致。
 
 ## 发布与更新
 
