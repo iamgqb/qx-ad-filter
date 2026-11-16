@@ -1,0 +1,67 @@
+[
+  {
+    "name": "首页两类商业卡片删除，普通视频、直播、顺序和配置保留",
+    "input": {
+      "url": "https://app.bilibili.com/x/v2/feed/index?build=fixture&platform=ios",
+      "body": {
+        "code": 0, "message": "0", "ttl": 1,
+        "data": {
+          "config": {"column": 2, "next_cursor": "fixture-next"},
+          "interest_choose": null,
+          "items": [
+            {"card_type": "small_cover_v2", "card_goto": "av", "goto": "vertical_av", "idx": 1, "title": "普通视频", "ad_info": {"resource": 100, "source": 200, "is_ad_loc": true}},
+            {"card_type": "cm_v2", "card_goto": "ad_av", "idx": 3, "ad_info": {"card_type": 1, "is_ad": true, "is_ad_loc": true, "creative_content": {"title": "示例视频广告"}}},
+            {"card_type": "cm_v2", "card_goto": "ad_web_s", "idx": 7, "ad_info": {"card_type": 3, "is_ad_loc": true, "creative_content": {"title": "示例商品", "image_url": "https://assets.example.com/product.jpg"}}},
+            {"card_type": "small_cover_v9", "card_goto": "live", "idx": 8, "title": "普通直播"}
+          ]
+        }
+      }
+    },
+    "expected": {
+      "mode": "json",
+      "body": {
+        "code": 0, "message": "0", "ttl": 1,
+        "data": {
+          "config": {"column": 2, "next_cursor": "fixture-next"},
+          "interest_choose": null,
+          "items": [
+            {"card_type": "small_cover_v2", "card_goto": "av", "goto": "vertical_av", "idx": 1, "title": "普通视频", "ad_info": {"resource": 100, "source": 200, "is_ad_loc": true}},
+            {"card_type": "small_cover_v9", "card_goto": "live", "idx": 8, "title": "普通直播"}
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "开屏预加载广告与对应展示计划过期，ID、素材、频控和外壳保留",
+    "input": {
+      "url": "https://app.bilibili.com/x/v2/splash/list?platform=ios&build=fixture",
+      "body": {
+        "code": 0, "message": "0", "ttl": 1,
+        "data": {
+          "max_time": 30, "min_interval": 3600, "pull_interval": 900, "keep_ids": [],
+          "list": [{"id": 101, "is_ad": true, "is_ad_loc": true, "duration": 3, "begin_time": 100, "end_time": 200, "thumb": "https://assets.example.com/splash.jpg"}],
+          "show": [{"id": 101, "stime": 100, "etime": 200, "ad_cb": "fixture-callback"}],
+          "splash_request_id": "fixture-request"
+        }
+      }
+    },
+    "expected": {
+      "mode": "json",
+      "body": {
+        "code": 0, "message": "0", "ttl": 1,
+        "data": {
+          "max_time": 30, "min_interval": 3600, "pull_interval": 900, "keep_ids": [],
+          "list": [{"id": 101, "is_ad": true, "is_ad_loc": true, "duration": 0, "begin_time": 1, "end_time": 2, "thumb": "https://assets.example.com/splash.jpg"}],
+          "show": [{"id": 101, "stime": 1, "etime": 2, "ad_cb": "fixture-callback"}],
+          "splash_request_id": "fixture-request"
+        }
+      }
+    }
+  },
+  {
+    "name": "接口错误响应原样保留",
+    "input": {"url": "https://app.bilibili.com/x/v2/feed/index", "body": {"code": -500, "message": "示例错误", "data": {"items": []}}},
+    "expected": {"mode": "passthrough"}
+  }
+]

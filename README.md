@@ -12,6 +12,7 @@
 | 恩基爱社区 | QX 原生规则，无 JS | [nga-ad-filter.conf](rewrites/nga-ad-filter.conf) | 1.1.47 的 SDK 开屏与推荐流广告；热帖、版块及帖子回复回归 |
 | 知乎（iOS） | QX 原生规则，无 JS | [zhihu-ad-filter.conf](rewrites/zhihu-ad-filter.conf) | 11.11.0 的开屏与回答底部广告，配套 HTTPDNS 回退；正文与评论保留 |
 | Spotify（iOS） | QX 原生规则，无 JS | [spotify-ad-filter.conf](rewrites/spotify-ad-filter.conf) | 9.1.94 原始账号的音频插播链路；两次自然换曲与正常播放回归；保留原随机限制 |
+| 哔哩哔哩（iOS 中文版） | [bilibili-ad-filter.js](scripts/bilibili-ad-filter.js) | [bilibili-ad-filter.conf](rewrites/bilibili-ad-filter.conf) | 9.19.1 首页商业卡片的实机过滤与翻页；开屏缓存记录过期及连续启动，保留频控对照边界 |
 
 微博国际版的 bundle ID 为 `com.weibo.international`；这些规则的验证范围是国际版。详细接口分析、缓存处理和验证边界见[微博经验记录](docs/experience/weibo-case.md)。
 
@@ -111,12 +112,38 @@ https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/spotify-ad-f
 
 1.0.0 已随提交 [`eb1b11c`](https://github.com/iamgqb/qx-ad-filter/commit/eb1b11c) 发布到 `main`；Raw URL 返回 HTTP 200，386 字节文本正文与发布文件一致。
 
+## 哔哩哔哩订阅使用
+
+[bilibili-ad-filter.conf](rewrites/bilibili-ad-filter.conf) 1.0.0 包含 3 条规则和 `app.bilibili.com` 的 MitM hostname：两条响应脚本规则处理首页商业卡片与开屏预加载，一条原生 `reject-dict` 规则限定开屏展示接口的 GET 请求。验证目标为中文版 9.19.1（`tv.danmaku.bilianime`）；国际版未回归。接口证据和验证边界见[哔哩哔哩案例](docs/experience/bilibili-ios-case.md)。
+
+资源发布并完成 Raw 正文验证后，在 QX 重写资源中添加：
+
+```text
+https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/bilibili-ad-filter.conf
+```
+
+也可以加入当前配置已有的 `[rewrite_remote]` 段：
+
+```ini
+[rewrite_remote]
+https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/rewrites/bilibili-ad-filter.conf, tag=哔哩哔哩去广告, update-interval=86400, enabled=true
+```
+
+启用 VPN、重写和 MitM，并沿用已安装且完全信任的 MitM 证书。资源通过完整 HTTPS URL 获取脚本，无需本地脚本副本。启用后确认资源包含 3 条规则，清理同路径的重复本地规则或其他哔哩哔哩去广告资源。停用时禁用或移除「哔哩哔哩去广告」订阅。
+
+首页仅删除已确认的 `cm_v2` 商业卡片，保留普通视频、直播、顺序和接口配置；普通视频即使含有 `ad_info` 或 `is_ad_loc` 也继续保留。开屏预加载保留 `is_ad: true` 的已知记录 ID 和素材，将其有效期、展示时长及同 ID 展示计划设为过期，覆盖客户端旧缓存；保留服务端间隔、非广告记录与未知展示 ID。非空 `keep_ids` 的缓存语义未验证，相关响应原样放行。品牌启动图接口、活动接口、导航、会员状态、视频与图片 CDN 均不改写；开屏投放中的官方活动若明确标记为广告，也会过期。
+
+本轮已验证首页真实改写、画面和翻页；开屏曾复现带倒计时的官方活动投放，清空列表仍显示，改为保留 ID 并设为过期后连续启动未再出现。恢复原始投放时未稳定复现，尚未排除全部频控因素，开屏效果保留长期验证边界。播放页、搜索、动态及其他广告形式未纳入本版本；使用相同接口的其他客户端也可能受影响。
+
+发布状态：1.0.0 尚待推送与 Raw 正文验证；完成后更新本节与案例记录。
+
 ## 发布与更新
 
 将 `scripts/` 和 `rewrites/` 一起发布到仓库 `main` 分支后，上述订阅地址即可使用。资源中的 JS 地址为：
 
 ```text
 https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/scripts/weibo-ad-filter.js
+https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/scripts/bilibili-ad-filter.js
 ```
 
 发布后检查各资源及其引用的 JS 的 Raw 地址返回实际文件内容，而不是 GitHub 的 HTML 页面。恩基爱社区、知乎和 Spotify 资源分别只需发布对应的 `rewrites/nga-ad-filter.conf`、`rewrites/zhihu-ad-filter.conf`、`rewrites/spotify-ad-filter.conf`，不需要 JS。订阅配置设置为每 86400 秒更新；发布修改后也可在 QX 中手动刷新资源，并确认相应远程脚本已更新。若使用固定版本，资源和脚本应同时指向该版本。
@@ -152,6 +179,7 @@ https://raw.githubusercontent.com/iamgqb/qx-ad-filter/main/scripts/weibo-ad-filt
 | [恩基爱社区](docs/experience/nga-ios-case.md) | 限量 SDK 元数据采集、精确原生拒绝、开屏与多页面对照 |
 | [知乎 iOS](docs/experience/zhihu-ios-case.md) | 嵌套广告容器、开屏与回答底部原生拒绝、HTTPDNS 单域名和批量查询回退 |
 | [Spotify iOS 账号权限、播放顺序与音频插播](docs/experience/spotify-ios-account-playback-case.md) | 原生广告拒绝与自然换曲对照；账号顺序改写的失败复测、播放许可和会话恢复边界 |
+| [哔哩哔哩 iOS](docs/experience/bilibili-ios-case.md) | 普通视频也有广告位元数据；按商业卡片结构过滤、预加载展示 ID 关联及投放时段验证边界 |
 
 X 原生 iOS App 12.36 在记录的测试环境中拒绝 QX 代理证书，未取得可供过滤的时间线响应；本仓库没有可用的 X 过滤规则。该结论不覆盖其他版本或网页版。
 
@@ -163,7 +191,7 @@ X 原生 iOS App 12.36 在记录的测试环境中拒绝 QX 代理证书，未�
 npm test
 ```
 
-回归包含：独立广告数组清理、正常微博与分页保留、嵌套卡片、SDK `OK` 后缀、预加载记录失效、错误放行、URL 匹配边界，以及零诊断 I/O、未修改时不编码 JSON、原生订阅格式和远程脚本文件映射。NGA、知乎和 Spotify 原生规则另检查实际投放路径、MitM 覆盖、唯一匹配和普通业务路径保留；Spotify 另验证 POST 方法边界。
+回归包含：独立广告数组清理、正常微博与分页保留、嵌套卡片、SDK `OK` 后缀、预加载记录失效、错误放行、URL 匹配边界，以及零诊断 I/O、未修改时不编码 JSON、原生订阅格式和远程脚本文件映射。NGA、知乎和 Spotify 原生规则另检查实际投放路径、MitM 覆盖、唯一匹配和普通业务路径保留；Spotify 另验证 POST 方法边界。哔哩哔哩另验证商业卡片与普通视频区分、预加载与展示 ID 关联、未知缓存结构放行，以及原生开屏规则的 GET 方法边界。
 
 也可以用技能自带测试器验证其他同步响应脚本：
 
