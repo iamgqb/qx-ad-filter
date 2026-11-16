@@ -14,8 +14,7 @@ captures/
 *.mobileprovision
 .env
 .env.*
-mesl.conf
-dler.conf
-diy.conf
+# 根目录配置留在本机；正式 rewrite resources 放在 rewrites/。
+/*.conf
 __pycache__/
 *.pyc
